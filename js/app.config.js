@@ -11,9 +11,9 @@ app.config={
 		this.api_keys = {
 
 			//tmdb:		["9b939aee0aaafc12a65bf448e4af9543"][(Math.floor(Math.random()*1))],
-			tmdb:		'9b939aee0aaafc12a65bf448e4af9543',
-			tmdb_url:	'http://api.themoviedb.org/3/',
-			tmdb_src:	'http://image.tmdb.org/t/p/',
+			tmdb:		'49101d62654e71a2931722642ac07e5e',
+			tmdb_url:	'//api.themoviedb.org/3/',
+			tmdb_src:	'//image.tmdb.org/t/p/',
 
 		}
 
@@ -59,8 +59,7 @@ app.config={
 		subsFontSize:	localStorage.getItem('conf_hostApp_subsFontSize') || "0",
 		cleanOnExit:	localStorage.getItem('conf_hostApp_cleanOnExit') && localStorage.getItem('conf_hostApp_cleanOnExit')!="0",
 		hideGlare:		localStorage.getItem('conf_hostApp_hideGlare') || false,
-		//vpnAlert:		localStorage.getItem('conf_hostApp_vpnAlert') || "on",
-		vpnAlert:		localStorage.getItem('conf_hostApp_vpnAlert') || "off",
+		vpnAlert:		localStorage.getItem('conf_hostApp_vpnAlert') || "on",
 		isVPN:			1,
 		vpnInstalled:	function(mode){
 			app.config.hostApp.isVpnInstalled = (mode ? 1:0);
