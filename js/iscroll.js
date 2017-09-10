@@ -1709,7 +1709,9 @@ Indicator.prototype = {
 		}
 
 		if ( this.options.defaultScrollbars ) {
-			this.wrapper.parentNode.removeChild(this.wrapper);
+			if(this.wrapper && this.wrapper.parentNode) {
+				this.wrapper.parentNode.removeChild(this.wrapper);
+			}
 		}
 	},
 

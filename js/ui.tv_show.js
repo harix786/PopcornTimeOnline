@@ -125,7 +125,6 @@ ui.tv = {
 
 
 		ui.tv.session = {
-
 			id:				imdb,
 			imdb:			imdb,
 			episode_id: 	episode_id,
@@ -138,11 +137,20 @@ ui.tv = {
 			time:			(new Date).getTime()
 
 		}
-
+		$.get("//www.omdbapi.com/?i="+imdb+"&y=&plot=short&r=json&season="+season_id+"&episode="+episode_number+"",function(response) {
+			if(response && response.imdbID) {
+				ui.tv.session.imdb = response.imdbID;
+			}
+		},'json');
 		$('#slider_tvshow .episode_name').html(episode.title);
 		$('#slider_tvshow .episode_number').html( locale.translate('episode') + ' ' + episode_number);
 		$('#slider_tvshow .episode_overview').html(episode.synopsis);
 
+      var title = (ui.tv.session.title.replace(/\s\(\d{4}\)$/,'') + ' season' + ' ' + season_id + ' episode' + ' ' + episode_number + ' ' + episode.title);
+      utils.setMetas({
+         title : utils.titles.itemTitle.replace('{{item_name}}',  ui.tv.session.title),
+         url : '/' + slugify(title)  +'.html?imdb=' + (imdb.replace('tt',"")) + '-' + season_id + '-' + episode_number
+      });
 		torrent_selector.html('');
 		clearSubs();
 
@@ -185,44 +193,15 @@ ui.tv = {
 
 
 		ui.tv.session.subtitles = [];
-		fetcher.scrappers.torrentsapi_subs(imdb, season_id, episode_id, function(subs){
-
-			if(!subs instanceof Array || !subs.length){
-				clearSubs('No &nbsp;Subtitles');
-				return;
-			}
-
-			ui.tv.session.subtitles = [];
-			var insubs = {};
-			clearSubs();
-
-			for(var i=0;i<subs.length;i++){
-
-				if(!insubs[subs[i][1]]){
-
-					insubs[subs[i][1]] = true;
-
-					var selected = subs[i][1] == app.config.locale.preferredSubs;
-					if(selected)
-						ui.tv.session.subtitles_locale = subs[i][1];
-
-					$('<div data-locale="' + subs[i][1] + '" class="item subtitle ' + (selected ? 'activated':'') + '"><div class="caption"><img src="css/images/flags/' + (resource.lang2code[subs[i][1]] || 'xx') + '.png" class="flag" onload="this.style.visibility=\'visible\'">' + (locale.langs[subs[i][1]] || subs[i][2]) + '</div></div>')[(selected ? 'prependTo' : 'appendTo')](subtitles_selector)
-					.click(function(){
-								$('.item.subtitle.activated').removeClass('activated')
-								$(this).addClass('activated');
-								app.config.set({locale: {preferredSubs: $(this).data('locale')}})
-								ui.tv.session.subtitles_locale = $(this).data('locale');
-					})
-
-
-					ui.tv.session.subtitles.push(subs[i]);
-				}
-			}
-		})
 
 	},
 
 	watch:function(e){
+
+		if(window.deviceNotSupport) {
+			$('#deviceNotSupported').show();
+			return;
+		}
 		Mousetrap.pause();
 		torrentsTime.pt.setup.vpnShowed = false;
 		app.torrent.get(this.session);
@@ -444,11 +423,11 @@ ui.tv = {
 								if(json.posters[i].height>1080)
 
 									if(json.posters[i].iso_639_1==locale.language){
-										poster_img = 'http://image.tmdb.org/t/p/w780/' + json.posters[i].file_path;
+										poster_img = '//image.tmdb.org/t/p/w780/' + json.posters[i].file_path;
 										break;
 									}
 									else if(!gotFirstEnPoster && json.posters[i].iso_639_1=='en'){
-										poster_img = 'http://image.tmdb.org/t/p/w780/' + json.posters[i].file_path;
+										poster_img = '//image.tmdb.org/t/p/w780/' + json.posters[i].file_path;
 										gotFirstEnPoster=true;
 									}
 
@@ -490,7 +469,7 @@ ui.tv = {
 									var bd = json.backdrops[i];
 									if(bd.width==1920){
 										var
-										src = 'http://image.tmdb.org/t/p/w' + bd.width + bd.file_path,
+										src = '//image.tmdb.org/t/p/w' + bd.width + bd.file_path,
 										img = new Image;
 										img.onload = function(){
 

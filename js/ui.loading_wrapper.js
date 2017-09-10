@@ -33,15 +33,13 @@ ui.loading_wrapper = {
 
 		$('#loading_wrapper .f')[f ? 'hide' : 'show']()
 
-/*
-		if(!hostApp.vpn_isConnected())
-			$('#loading_wrapper .icon.locked').css('visibility','hidden');
 
+		if(app.config.hostApp.isVpnConnected || !torrentsTime.pt.plugin.isInitialized)
+			$('#loading_wrapper .vpnmsg').hide();
 		else
-			$('#loading_wrapper .icon.locked').css('visibility','visible');
+			$('#loading_wrapper .vpnmsg').show();
 
 
-*/
 	},
 
 	hide: function(native_call){

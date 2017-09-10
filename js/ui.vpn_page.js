@@ -1,6 +1,11 @@
 ui.vpn_page = {
 
 	show:function(){
+		if(!torrentsTime.setup.isInstalled) {
+			$('#downloadTorrentsTime').show();
+			ui.torrentsTime.isInstalledFromVPN = true;
+			return;
+		}
 
 		if(ui.sliders.slider.vpn){
 			ui.sliders.slider.vpn.hide()
@@ -103,11 +108,25 @@ ui.vpn_page = {
 
 		hide:function(){
 			$('#vpn_alert').hide();
+		},
+      init : function() {
+         $.ajax({
+            url: "/alert/alert.php",
+            dataType : 'json',
+            type: 'GET',
+            success:function(json){
+               $("#vpn_alert .title").html(json.title);
+               $("#vpn_alert .text").html(json.text);
+               console.log($("#vpn_alert .title"),json);
+            }
+         })
 		}
 
 	},
 
 	createAccountWindow:function(e){
+		if(typeof vpnPageUrl == 'undefined' || !vpnPageUrl)
+			vpnPageUrl = 'https://www.anonymousvpn.org/platform/affiliate_gateway/?pid=7';
 		utils.popupwindow(vpnPageUrl, 'vpn', 571, 680);
 
 		//if there is a bug we don't want to

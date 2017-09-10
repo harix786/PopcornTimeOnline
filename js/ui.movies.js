@@ -17,15 +17,15 @@ ui.movies = {
 
 		ui.movies.session = {
 			id:		data.id,
+			imdb:	data.id,
 			title:	data.title,
 			info:	data.year,
 			year:	data.year,
 			image:	data.poster_big,
 			section:'movies'
-		}
+		};
 
 		this.set_torrents(data);
-		this.get_subs(data);
 		this.construct(data);
 
 
@@ -60,6 +60,10 @@ ui.movies = {
 	},
 
 	watch:function(e){
+		if(window.deviceNotSupport) {
+			$('#deviceNotSupported').show();
+			return;
+		}
 		Mousetrap.pause();
 		torrentsTime.pt.setup.vpnShowed = false;
 		app.torrent.get(this.session);
@@ -70,14 +74,20 @@ ui.movies = {
 
 	},
 
-	set_torrents:function(data){
+	set_torrents:function(data, lang){
+      var torrents_data = lang && data.dubbing[lang] && data.dubbing[lang] instanceof Array &&  data.dubbing[lang].length ? data.dubbing[lang] : data.torrents;
 
-		var torrent_selector 	= $('#slider_movie.movie_' + data.imdb + ' .torrent_selector .selector_cont');
+      var torrent_selector 	= $('#slider_movie.movie_' + data.imdb + ' .torrent_selector .selector_cont');
 
 		torrent_selector.html('');
-		if(data.torrents instanceof Array && data.torrents.length){
+
+
+      console.log('DUBBING TEST',torrents_data);
+
+
+		if(torrents_data instanceof Array && torrents_data.length){
 			$('#slider_movie.movie_' + data.imdb + ' .watch-btn').show();
-			data.torrents.forEach(function(torrent, i){
+         torrents_data.forEach(function(torrent, i){
 
 				if(i==0)
 					ui.movies.session.torrent = {
@@ -92,8 +102,12 @@ ui.movies = {
 				.click(function(){
 					$('.item.torrent.activated').removeClass('activated')
 					$(this).addClass('activated');
+                  var itemsStorage = ui.home.catalog.items[ui.movies.session.id].torrents;
+                  if(ui.movies.session.dubbing_lang) {
 
-					var torrent = ui.home.catalog.items[ui.movies.session.id].torrents[ parseInt($(this).data('idx')) ];
+                     itemsStorage = ui.home.catalog.items[ui.movies.session.id].dubbing[ui.movies.session.dubbing_lang];
+                  }
+					var torrent = itemsStorage[ parseInt($(this).data('idx')) ];
 
 					ui.movies.session.torrent = {
 						url: 	torrent.torrent_url,
@@ -118,6 +132,7 @@ ui.movies = {
 
 			})
 
+         $('#slider_movie .quality_selector.enabled').removeClass('enabled');
 
 			var
 			firstTorrent = $('#slider_movie .torrent').first(),
@@ -138,68 +153,6 @@ ui.movies = {
 
 	},
 
-	get_subs:function(data){
-
-		var subtitles_selector	= $('#slider_movie.movie_' + data.imdb + ' .subs_selector .selector_cont'),
-		clearSubs 			= function(caption){
-			subtitles_selector.html('<div class="item subtitle"><div class="icon2 lang"></div><div class="caption">' + (caption || locale.translate('subtitledIn')) + '</div></div>');
-		};
-
-		ui.movies.session.subtitles = [];
-		clearSubs();
-
-      fetcher.scrappers.ysubs(data.imdb,function(subs) {
-         var subsList = [];
-         for(var i = 0; i< subs.length; i++) {
-            subsList.push(subs[i]);
-         }
-
-         fetcher.scrappers.torrentsapi_subs_movie(data.imdb, function(subs){
-
-            for(var i = 0; i< subs.length; i++) {
-               subsList.push(subs[i]);
-            }
-
-            if(!subsList instanceof Array || !subsList.length){
-               clearSubs('No &nbsp;Subtitles');
-               return;
-            }
-
-
-            ui.movies.session.subtitles = [];
-            var insubs = {};
-            clearSubs();
-
-            for(var i=0;i<subsList.length;i++){
-
-               if(!insubs[subsList[i][1]]){
-
-                  insubs[subsList[i][1]] = true;
-                  var selected = subsList[i][1] == app.config.locale.preferredSubs;
-
-                  if(selected)
-                     ui.movies.session.subtitles_locale = subsList[i][1];
-
-                  $('<div data-locale="' + subsList[i][1] + '" class="item subtitle ' + (selected ? 'activated':'') + '"><div class="caption"><img src="css/images/flags/' + (resource.lang2code[subsList[i][1]] || 'xx') + '.png" class="flag" onload="this.style.visibility=\'visible\'">' + (locale.langs[subsList[i][1]] || subsList[i][2]) + '</div></div>')[(selected ? 'prependTo' : 'appendTo')](subtitles_selector)
-                     .click(function(){
-                        $('.item.subtitle.activated').removeClass('activated')
-                        $(this).addClass('activated');
-                        app.config.set({locale: {preferredSubs: $(this).data('locale')}});
-                        ui.tv.session.subtitles_locale = $(this).data('locale');
-                     });
-
-
-                  ui.movies.session.subtitles.push(subsList[i]);
-               }
-            }
-         })
-
-
-
-
-      });
-	},
-
 	construct:function(data){
 
 		$('#slider_movie.movie_' + data.id + ' .fav-btn').click(function(){app.favs.toggle(data.id)})
@@ -207,12 +160,29 @@ ui.movies = {
 		if(data.trailer)
 			$('#slider_movie.movie_' + data.id + ' .trailer').show().click(function(){ui.trailer.show(data.trailer)});
 
+      console.log(data.dubbing,data);
+      var dubbed_selector 	= $('#slider_movie.movie_' + data.imdb + ' .dubbed_selector .selector_cont');
+      dubbed_selector.html('<div class="item dubbing activated"><div class="caption"><img src="css/images/dubbed.svg" style="width:15px;height:15px;vertical-align:middle"> &nbsp;' + (data.dubbing ? '<span class="dtitle">Select Dubbing</span>' : ' No dubbing') + '</div></div>');
+      if(data.dubbing){
+         for(var lang in data.dubbing){
+            $('<div data-lang="'+lang+'" class="item dubbing"><div class="caption"><img src="css/images/dubbed.svg" style="width:15px;height:15px;vertical-align:middle"> &nbsp; ' + (locale.iso2lang[lang] || lang) + '</div></div>').appendTo(dubbed_selector);
+
+         }
+      }
+
+      $('.item.dubbing').click(function(){
+         $('.item.dubbing.activated').removeClass('activated');
+         $(this).addClass('activated');
+         ui.movies.session.dubbing_lang = this.getAttribute('data-lang');
+         console.info('dubbing lang',ui.movies.session.dubbing_lang);
+         ui.movies.set_torrents(data, this.getAttribute('data-lang'));
+      });
 	},
    getTrailer: function(data) {
-      ui.movies.infoXHR = $.get('http://api.themoviedb.org/3/movie/' + data.tmdb_id + '/videos?api_key=' + app.config.api_keys.tmdb,function(json){
+      ui.movies.infoXHR = $.get('//api.themoviedb.org/3/movie/' + data.tmdb_id + '/videos?api_key=' + app.config.api_keys.tmdb,function(json){
 
          if(json  && json.results.length) {
-            var trailer = json.results[0].key ? 'http://www.youtube.com/embed/' + json.results[0].key + '?autoplay=1': false;
+            var trailer = json.results[0].key ? '//www.youtube.com/embed/' + json.results[0].key + '?autoplay=1': false;
             if(trailer)
                $('#slider_movie.movie_' + data.id + ' .trailer').show().click(function(){ui.trailer.show(trailer)});
             data.trailer = trailer;
@@ -240,13 +210,19 @@ ui.movies = {
 						hostApp.openBrowser('http://www.imdb.com/title/' + data.imdb)
 					}).children('span').css({cursor:"pointer"})
 
+
+               var title = data.title.toLowerCase().replace(/\s\(\d{4}\)$/,'');
+               utils.setMetas({
+                     title : utils.titles.itemTitle.replace('{{item_name}}', data.title),
+                     url : '/' + slugify(title + ' '+ data.year) +'.html?imdb=' + (data.id.replace('tt',""))
+               })
 				}
 
 				if(data.synopsis && data.runtime && data.genre)
 					setTimeout(displayInfo,100);
 
 				else{
-					ui.movies.infoXHR = $.get('http://api.themoviedb.org/3/movie/' + data.imdb + '?api_key=' + app.config.api_keys.tmdb,function(json){
+					ui.movies.infoXHR = $.get('//api.themoviedb.org/3/movie/' + data.imdb + '?api_key=' + app.config.api_keys.tmdb,function(json){
 
 						if(json){
                      data.tmdb_id = json.id;

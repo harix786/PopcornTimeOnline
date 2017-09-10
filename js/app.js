@@ -11,7 +11,7 @@ hostApp = {
 		torrentsTime.pt.setup.file = session.torrent.file;
 		torrentsTime.setup.source = session.torrent.magnet || session.torrent.url;
 		torrentsTime.setup.file = session.torrent.file;
-		torrentsTime.setup.imdbid = session.id;
+		torrentsTime.setup.imdbid = session.imdb;
 
 		if(!torrentsTime.setup.isInstalled){
 			$('#downloadTorrentsTime').show();
@@ -35,6 +35,7 @@ app = {
 
 			app.state = 'mainWindow';
 
+         ui.vpn_page.alert.init();
 			app.config.init();
 			locale.construct(function(){
 				app.favs.init();
